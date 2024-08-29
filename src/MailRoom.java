@@ -4,7 +4,7 @@ import static java.lang.String.format;
 
 public class MailRoom {
     public enum Mode {CYCLING, FLOORING}
-    List<Letter>[] waitingForDelivery;
+    List<Item>[] waitingForDelivery;
     private final int numRobots;
 
     Queue<Robot> idleRobots;
@@ -49,27 +49,31 @@ public class MailRoom {
         deactivatingRobots = new ArrayList<>();
     }
 
-    void arrive(List<Letter> items) {
-        for (Letter item : items) {
+    void arrive(List<Item> items) {
+        for (Item item : items) {
             waitingForDelivery[item.myFloor()-1].add(item);
             System.out.printf("Item: Time = %d Floor = %d Room = %d Weight = %d\n",
-                    item.myArrival(), item.myFloor(), item.myRoom(), 0);
+                    item.myArrival(), item.myArrival(),item.myFloor(), item.myRoom(), 0);
         }
     }
 
     public void tick() { // Simulation time unit
+
         for (Robot activeRobot : activeRobots) {
-            System.out.printf("About to tick: " + activeRobot.toString() + "\n"); activeRobot.tick();
+            System.out.printf("About to tick: " + activeRobot.toString() + "\n");
+            activeRobot.tick();
         }
+
         robotDispatch();  // dispatch a robot if conditions are met
         // These are returning robots who shouldn't be dispatched in the previous step
         ListIterator<Robot> iter = deactivatingRobots.listIterator();
         while (iter.hasNext()) {  // In timestamp order
             Robot robot = iter.next();
             iter.remove();
-            activeRobots.remove(robot);
-            idleRobots.add(robot);
+               activeRobots.remove(robot);
+               idleRobots.add(robot);
         }
+
     }
 
     void robotDispatch() { // Can dispatch at most one robot; it needs to move out of the way for the next
@@ -101,11 +105,28 @@ public class MailRoom {
     }
 
     void loadRobot(int floor, Robot robot) {
-        ListIterator<Letter> iter = waitingForDelivery[floor].listIterator();
+        List<Item> itemsOnFloor = waitingForDelivery[floor];
+        Collections.sort(itemsOnFloor, (item1, item2) -> {
+            int arrivalTime1 = item1.myArrival();
+            int arrivalTime2 = item2.myArrival();
+            return Integer.compare(arrivalTime1, arrivalTime2);
+        });
+        ListIterator<Item> iter = itemsOnFloor.listIterator();
+        int capacity = robot.getCapacity();
+
         while (iter.hasNext()) {  // In timestamp order
-            Letter letter = iter.next();
-            robot.add(letter); //Hand it over
-            iter.remove();
+            Item item = iter.next();
+            if (item.myWeight() == 0) {
+                robot.add(item); //Hand it over
+                iter.remove();
+            }
+            else {
+                if (item.myWeight() > 0 && item.myWeight() < robot.getCapacity()) {
+                    robot.add(item);
+                    robot.setCapacity(robot.getCapacity() - item.myWeight());
+                    iter.remove();
+                }
+            }
         }
     }
 

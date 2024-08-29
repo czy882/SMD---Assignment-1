@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class Simulation {
-    private static final Map<Integer, List<Letter>> waitingToArrive = new HashMap<>();
+    private static final Map<Integer, List<Item>> waitingToArrive = new HashMap<>();
     private static int time = 0;
     public final int endArrival;
     final public MailRoom mailroom;
@@ -13,18 +13,18 @@ public class Simulation {
     private static int deliveredCount = 0;
     private static int deliveredTotalTime = 0;
 
-    public static void deliver(Letter mailItem) {
+    public static void deliver(Item mailItem) {
         System.out.println("Delivered: " + mailItem);
         deliveredCount++;
         deliveredTotalTime += now() - mailItem.myArrival();
     }
 
-    void addToArrivals(int arrivalTime, Letter item) {
+    void addToArrivals(int arrivalTime, Item item) {
         System.out.println(item.toString());
         if (waitingToArrive.containsKey(arrivalTime)) {
             waitingToArrive.get(arrivalTime).add(item);
         } else {
-            LinkedList<Letter> items = new LinkedList<>();
+            LinkedList<Item> items = new LinkedList<>();
             items.add(item);
             waitingToArrive.put(arrivalTime, items);
         }
@@ -59,6 +59,7 @@ public class Simulation {
             int room = random.nextInt(building.NUMROOMS)+1;
             int weight = random.nextInt(maxWeight)+1;
             // What am I going to do with all these values?
+            addToArrivals(arrivalTime, new Parcel(floor, room, arrivalTime, weight));
         }
     }
 
