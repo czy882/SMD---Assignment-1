@@ -11,14 +11,16 @@ public class Robot {
     final private MailRoom mailroom;
     final private List<Item> items = new ArrayList<>();
 
-    private int capacity = 40;
+
+    private int robotCapacity = 40;
     public String toString() {
         return "Id: " + id + " Floor: " + floor + ", Room: " + room + ", #items: " + numItems() + ", Load: " + getCapacity();
     }
 
-    Robot(MailRoom mailroom) {
+    Robot(MailRoom mailroom, int robotCapacity) {
         this.id = "R" + count++;
         this.mailroom = mailroom;
+        this.robotCapacity = robotCapacity;
     }
 
     int getFloor() { return floor; }
@@ -105,10 +107,10 @@ public class Robot {
 
 
     public int getCapacity() {
-        return capacity;
+        return robotCapacity;
     }
 
     public void setCapacity(int capacity) {
-        this.capacity = capacity;
+        this.robotCapacity = capacity;
     }
 }

@@ -4,10 +4,13 @@ import static java.lang.String.format;
 
 public class MailRoom {
     public enum Mode {CYCLING, FLOORING}
+    Mode mode;
+    private int robotCapacity;
     List<Item>[] waitingForDelivery;
     private final int numRobots;
 
     Queue<Robot> idleRobots;
+    List<Robot> activeFloorRobots;
     List<Robot> activeRobots;
     List<Robot> deactivatingRobots; // Don't treat a robot as both active and idle by swapping directly
 
@@ -35,19 +38,27 @@ public class MailRoom {
         return floor;
     }
 
-    MailRoom(int numFloors, int numRobots) {
+    MailRoom(int numFloors, int numRobots, Mode mode, int robotCapacity) {
+        this.mode = mode;
+        this.robotCapacity = robotCapacity;
         waitingForDelivery = new List[numFloors];
         for (int i = 0; i < numFloors; i++) {
             waitingForDelivery[i] = new LinkedList<>();
         }
         this.numRobots = numRobots;
-
-        idleRobots = new LinkedList<>();
-        for (int i = 0; i < numRobots; i++)
-            idleRobots.add(new Robot(MailRoom.this));  // In mailroom, floor/room is not significant
         activeRobots = new ArrayList<>();
         deactivatingRobots = new ArrayList<>();
+        activeFloorRobots = new ArrayList<>();
+        idleRobots = new LinkedList<>();
+
+        if (this.mode == mode.FLOORING) {
+
+        } else if (this.mode == mode.CYCLING) {
+            for (int i = 0; i < numRobots; i++)
+                idleRobots.add(new Robot(MailRoom.this, this.robotCapacity));  // In mailroom, floor/room is not significant
+        }
     }
+
 
     void arrive(List<Item> items) {
         for (Item item : items) {
@@ -58,20 +69,24 @@ public class MailRoom {
     }
 
     public void tick() { // Simulation time unit
+        if (this.mode == Mode.FLOORING) {
 
-        for (Robot activeRobot : activeRobots) {
-            System.out.printf("About to tick: " + activeRobot.toString() + "\n");
-            activeRobot.tick();
-        }
+        } else if (this.mode == mode.CYCLING) {
+            for (Robot activeRobot : activeRobots) {
+                System.out.printf("About to tick: " + activeRobot.toString() + "\n");
+                activeRobot.tick();
+            }
 
-        robotDispatch();  // dispatch a robot if conditions are met
-        // These are returning robots who shouldn't be dispatched in the previous step
-        ListIterator<Robot> iter = deactivatingRobots.listIterator();
-        while (iter.hasNext()) {  // In timestamp order
-            Robot robot = iter.next();
-            iter.remove();
-               activeRobots.remove(robot);
-               idleRobots.add(robot);
+            robotDispatch();  // dispatch a robot if conditions are met
+
+            // These are returning robots who shouldn't be dispatched in the previous step
+            ListIterator<Robot> iter = deactivatingRobots.listIterator();
+            while (iter.hasNext()) {  // In timestamp order
+                Robot robot = iter.next();
+                iter.remove();
+                activeRobots.remove(robot);
+                idleRobots.add(robot);
+            }
         }
 
     }

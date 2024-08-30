@@ -46,7 +46,7 @@ public class Simulation {
 
         Building.initialise(numFloors, numRooms);
         Building building = Building.getBuilding();
-        mailroom = new MailRoom(building.NUMFLOORS, numRobots);
+        mailroom = new MailRoom(building.NUMFLOORS, numRobots, mode, robotCapacity);
         for (int i = 0; i < numLetters; i++) { //Generate letters
             int arrivalTime = random.nextInt(endArrival)+1;
             int floor = random.nextInt(building.NUMFLOORS)+1;
