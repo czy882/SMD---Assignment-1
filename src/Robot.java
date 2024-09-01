@@ -1,30 +1,30 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 public class Robot {
     private static int count = 1;
     final private String id;
     private int floor;
     private int room;
+    private int numRoom;
+    private int load;
     final private MailRoom mailroom;
     final private List<Item> items = new ArrayList<>();
-
-
-    private int robotCapacity = 40;
+    private int robotCapacity;
     public String toString() {
-        return "Id: " + id + " Floor: " + floor + ", Room: " + room + ", #items: " + numItems() + ", Load: " + getCapacity();
+        return "Id: " + id + " Floor: " + floor + ", Room: " + room + ", #items: " + numItems() + ", Load: " + robotLoad();
     }
 
-    Robot(MailRoom mailroom, int robotCapacity) {
+    Robot(MailRoom mailroom) {
         this.id = "R" + count++;
         this.mailroom = mailroom;
-        this.robotCapacity = robotCapacity;
+        this.robotCapacity = mailroom.getCapacity();
     }
 
     int getFloor() { return floor; }
     int getRoom() { return room; }
+    public void setFloor (int floor) {this.floor = floor;}
+    public void setRoom (int room) {this.room = room;}
+    public void setNumRoom (int numRoom) {this.numRoom = numRoom;}
     boolean isEmpty() { return items.isEmpty(); }
 
     public void place(int floor, int room) {
@@ -34,7 +34,9 @@ public class Robot {
         this.room = room;
     }
 
-    private void move(Building.Direction direction) {
+    public MailRoom getMailroom () { return mailroom; }
+
+    public void move(Building.Direction direction) {
         Building building = Building.getBuilding();
         int dfloor, droom;
         switch (direction) {
@@ -56,11 +58,13 @@ public class Robot {
 
     void transfer(Robot robot) {  // Transfers every item assuming receiving robot has capacity
         ListIterator<Item> iter = robot.items.listIterator();
-        while(iter.hasNext()) {
+        do {
             Item item = iter.next();
             this.add(item); //Hand it over
+            this.robotCapacity -= item.myWeight();
             iter.remove();
-        }
+            robot.setCapacity(robot.getCapacity() + item.myWeight());
+        } while(iter.hasNext());
     }
 
     void tick() {
@@ -78,7 +82,9 @@ public class Robot {
                     // On the right floor
                     if (room == items.getFirst().myRoom()) { //then deliver all relevant items to that room
                         do {
-                            Simulation.deliver((Item) items.removeFirst());
+                            Item firstItem = items.getFirst();
+                            this.robotCapacity += firstItem.myWeight();
+                            Simulation.deliver(items.removeFirst());
                         } while (!items.isEmpty() && room == items.getFirst().myRoom());
                     } else {
                         move(Building.Direction.RIGHT); // move towards next delivery
@@ -110,7 +116,58 @@ public class Robot {
         return robotCapacity;
     }
 
+    public int robotLoad () {
+        load = 0;
+        for (Item item : items) {
+            load += item.myWeight();
+        }
+        return load;
+    }
+
     public void setCapacity(int capacity) {
         this.robotCapacity = capacity;
     }
+
+    public List<Item> getItems() { return items; }
+
+    void reverseSort() {Collections.sort(items, Comparator.reverseOrder());}
+
+    public int waitingRobot(Robot waitRoomRobot, List<Robot> activeColumnRobots) {
+        Robot leftOne = null;
+        Robot rightOne = null;
+
+        for (Robot robot : activeColumnRobots) {
+
+            // if robots are not carrying items or at a incorrect floor, skip cur robot
+            if (robot.getItems().isEmpty() || robot.getFloor() != waitRoomRobot.getFloor()) {
+                continue;
+            }
+
+            // check the robot should be settled on right or left
+            if (robot.getRoom() == 0
+                    && robot.getItems().getFirst().myFloor() == waitRoomRobot.getFloor()) {
+                leftOne = robot;
+            } else if (robot.getRoom() == Building.getBuilding().NUMROOMS + 1
+                    && robot.getItems().getFirst().myFloor() == waitRoomRobot.getFloor()) {
+                rightOne = robot;
+            }
+        }
+
+
+        // check if there is a robot on left side but not right side
+        if (leftOne != null && rightOne == null) {
+            return 0;
+        }
+        // check if there is a robot on right side but not left side
+        else if (leftOne == null && rightOne != null) {
+            return 1;
+        }
+        // compare the arriving time if there is a robot on both side
+        else if (leftOne != null && rightOne != null) {
+            return ((ColumnRobot)waitRoomRobot).findEarlyRobot(leftOne, rightOne) == 0 ? 0 : 1;
+        }
+
+        return -1;
+    }
 }
+

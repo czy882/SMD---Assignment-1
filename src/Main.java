@@ -11,7 +11,6 @@ public class Main {
         System.out.println("Properties file = " + propertiesFile);
         try (FileInputStream input = new FileInputStream(propertiesFile)) {
             Properties prop = new Properties();
-            // load a properties file
             prop.load(input);
             return prop;
         } catch (IOException ex) {

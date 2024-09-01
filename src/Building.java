@@ -3,8 +3,8 @@ import static java.lang.String.format;
 public class Building {
     private static boolean initialised = false;
     private static Building singleton = null;
-    final public int NUMFLOORS;
-    final public int NUMROOMS;
+    public final int NUMFLOORS;
+    public final int NUMROOMS;
     private boolean[][] occupied;
     public enum Direction {LEFT, RIGHT, UP, DOWN}
 
@@ -23,21 +23,18 @@ public class Building {
     }
 
     private Building() {
-        // System.out.println("Building constructor");
         this.NUMFLOORS = NUMF;
         this.NUMROOMS = NUMR;
-        occupied = new boolean[NUMFLOORS+1][NUMROOMS+2]; // robot space in building, initialised to zero (false)
+        occupied = new boolean[NUMFLOORS+1][NUMROOMS+2];
         bg = new BuildingGrid(NUMFLOORS, NUMROOMS);
     }
 
     public static Building getBuilding() {
-        // System.out.print("getBuilding ");
+
         if (singleton == null) {
-            // System.out.println("null");
             assert initialised : "Failure to initialise Building";
             singleton = new Building();
         } else {
-            // System.out.println("not null");
         }
         return singleton;
     }

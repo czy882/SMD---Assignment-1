@@ -18,7 +18,7 @@ public class Item implements Comparable<Item> {
     }
 
     public String toString() {
-        return "Floor: " + myFloor() + ", Room: " +  myRoom() + ", Arrival: " + myArrival() + ", Weight: " + this.weight;
+        return "Floor: " + floor + ", Room: " + room + ", Arrival: " + arrival + ", Weight: " + weight;
     }
 
 
